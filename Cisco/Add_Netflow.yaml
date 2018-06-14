@@ -1,0 +1,105 @@
+---
+- hosts: eastern_routers
+  gather_facts: no
+  connection: local
+
+  tasks:
+  - name: GATHER IOS FACTS
+    ios_facts:
+      gather_subset: all
+
+  # - name: FIND WAN INTERFACE
+  #   set_fact:
+  #     wan_int: "{{ item.key }}"
+  #   # debug:
+  #   #   msg: "Interface {{ wan_int }} is the WAN interface"
+  #   loop: "{{ lookup('dict', ansible_net_interfaces) }}"
+  #   when: '"Dialer0" in item.key or item.value.description and ("Connection to" in item.value.description or "FNN" in item.value.description or "PSTN" in item.value.description)'
+  #
+  # - name: FIND LAN INTERFACE
+  #   set_fact:
+  #     lan_int: "{{ item.key }}"
+  #   # debug:
+  #   #   msg: "Interface {{ lan_int }} is the LAN interface"
+  #   loop: "{{ lookup('dict', ansible_net_interfaces) }}"
+  #   when: 'item.value.description and "Customer LAN" in item.value.description'
+  #
+  # - name: ADD FLOW RECORD
+  #   ios_config:
+  #     parents: flow record cascade-record
+  #     lines:
+  #       - match interface input
+  #       - match interface output
+  #       - match ipv4 source address
+  #       - match ipv4 destination address
+  #       - match ipv4 protocol
+  #       - match transport source-port
+  #       - match transport destination-port
+  #       - collect flow direction
+  #       - collect ipv4 tos
+  #       - collect ipv4 ttl max
+  #       - collect transport tcp flags
+  #       - collect counter bytes
+  #       - collect counter packets
+  #       - collect routing next-hop address ipv4
+  #       - collect timestamp sys-uptime first
+  #       - collect timestamp sys-uptime last
+  #
+  # - name: ADD FLOW EXPORT
+  #   ios_config:
+  #     parents: flow exporter cascade-export
+  #     lines:
+  #       - destination 10.5.160.13
+  #       - source {{ lan_int }}
+  #       - transport udp 2055
+  #       - export-protocol netflow-v9
+  #
+  # - name: ADD FLOW MONITOR
+  #   ios_config:
+  #     parents: flow monitor cascade-monitor
+  #     lines:
+  #       - exporter cascade-export
+  #       - cache timeout inactive 15
+  #       - cache timeout active 60
+  #       - record cascade-record
+  #
+  # - name: ADD FLOW TO WAN INT
+  #   ios_config:
+  #     parents: interface {{ wan_int }}
+  #     lines:
+  #       - ip flow monitor cascade-monitor input
+  #       - ip flow monitor cascade-monitor output
+  #
+  # - name: ADD SNMP STRING
+  #   ios_config:
+  #     lines:
+  #       - snmp-server community salvat RO
+
+  # - name: CHECK FOR SERVICE POLICY
+  #   ios_command:
+  #     commands: "show run interface {{ wan_int }}"
+  #     waitfor: "result[0] contains service-policy"
+  #   register: command
+
+  # - name: REMOVE EXPORT
+  #   ios_config:
+  #     parents: ["interface {{ wan_int }}"]
+  #     lines:
+  #       - no ip flow monitor cascade-monitor input
+  #       - no ip flow monitor cascade-monitor output
+  #     replace: block
+  #     match: none
+  #
+  # - name: REMOVE FLOW
+  #   ios_config:
+  #     lines:
+  #       - no flow monitor cascade-monitor
+  #       - no flow exporter cascade-export
+  #     replace: block
+  #     match: none
+  #
+  - name: SAVE CONFIG
+    ios_config:
+      save_when: always
+
+  # - debug: msg="The LAN interface is {{ lan_int }} and the WAN interface is {{ wan_int }}"
