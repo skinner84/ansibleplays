@@ -1,0 +1,54 @@
+---
+- hosts: cisco_routers
+  gather_facts: no
+  connection: local
+
+  tasks:
+  - name: RUN SHOW INTERFACES
+    ios_facts:
+      gather_subset: all
+
+  - name: FIND WAN INTERFACES
+    set_fact:
+      wan_int: "{{ item.key }}"
+    # debug:
+    #   msg: "Interface {{ wan_int }} is the WAN interface"
+    loop: "{{ lookup('dict', ansible_net_interfaces) }}"
+    when: '"Dialer0" in item.key or item.value.description and ("Connection to" in item.value.description or "FNN" in item.value.description or "PSTN" in item.value.description)'
+
+  # - name: FIND LAN INTERFACES
+  #   set_fact:
+  #     lan_int: "{{ item.key }}"
+  #   # debug:
+  #   #   msg: "Interface {{ lan_int }} is the LAN interface"
+  #   loop: "{{ lookup('dict', ansible_net_interfaces) }}"
+  #   when: 'item.value.description and "Customer LAN" in item.value.description'
+
+  # - name: CHECK FOR SERVICE POLICY
+  #   ios_command:
+  #     commands: "show run interface {{ wan_int }}"
+  #     waitfor: "result[0] contains service-policy"
+  #   register: command
+
+  - name: REMOVE EXPORT
+    ios_config:
+      parents: ["interface {{ wan_int }}"]
+      lines:
+        - no ip flow monitor cascade-monitor input
+        - no ip flow monitor cascade-monitor output
+      replace: block
+      match: none
+
+  - name: REMOVE FLOW
+    ios_config:
+      lines:
+        - no flow monitor cascade-monitor
+        - no flow exporter cascade-export
+      replace: block
+      match: none
+
+  - name: SAVE CONFIG
+    ios_config:
+      save_when: always
+
+  # - debug: msg="{{ command.stdout_lines }}"

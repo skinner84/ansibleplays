@@ -1,0 +1,13 @@
+localhost
+
+[ios]
+10.72.248.1
+10.5.163.194
+10.72.8.1
+10.72.76.1
+10.72.164.1
+
+[ios:vars]
+ansible_connection=local
+ansible_ssh_user=d805113
+ansible_ssh_pass=Telstra8
